@@ -1,0 +1,139 @@
+# =============================================================================
+# .gitignore — Piso Salarial da Enfermagem
+# =============================================================================
+# Regra geral: bases de dados pesadas não são versionadas.
+# Exceção explícita: arquivos .xlsx são incluídos.
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# DADOS BRUTOS — Novo CAGED e similares
+# -----------------------------------------------------------------------------
+docs/dados/
+
+
+# -----------------------------------------------------------------------------
+# FORMATOS DE BASES DE DADOS
+# -----------------------------------------------------------------------------
+
+# Dados colunares / analíticos
+*.parquet
+*.arrow
+*.feather
+*.orc
+
+# Texto delimitado (dados tabulares grandes)
+*.csv
+*.tsv
+*.txt
+
+# Formatos estatísticos
+*.dta          # Stata
+*.sas7bdat     # SAS
+*.sav          # SPSS
+*.por          # SPSS portable
+*.xpt          # SAS transport
+*.rds          # R (objeto único)
+*.RData        # R (workspace)
+*.rda          # R (workspace alternativo)
+
+# Bancos de dados
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.accdb        # Access
+*.mdb          # Access legado
+
+# Formatos compactados (tipicamente dados brutos)
+*.7z
+*.zip
+*.gz
+*.bz2
+*.tar
+*.rar
+*.xz
+*.zst
+
+# JSON / XML grandes (APIs, dados geoespaciais)
+*.json
+*.geojson
+*.xml
+*.shp
+*.dbf
+*.shx
+*.prj
+*.cpg
+
+
+# -----------------------------------------------------------------------------
+# EXCEL — PERMITIDO (exceto arquivos temporários e arquivos >100 MB)
+# -----------------------------------------------------------------------------
+!*.xlsx
+!*.xls
+
+# Arquivos xlsx grandes demais para o GitHub (>100 MB)
+docs/base_piso_invest_25_07.xlsx
+
+# Arquivos temporários do Excel (criados durante edição)
+~$*.xlsx
+~$*.xls
+~$*.xlsm
+
+
+# -----------------------------------------------------------------------------
+# AMBIENTE R
+# -----------------------------------------------------------------------------
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+.Renviron
+
+
+# -----------------------------------------------------------------------------
+# SAÍDAS GERADAS (figuras e relatórios — opcionais)
+# -----------------------------------------------------------------------------
+# Descomente se não quiser versionar gráficos gerados automaticamente:
+# output/*.png
+# output/*.pdf
+# output/*.svg
+# output/*.html
+
+
+# -----------------------------------------------------------------------------
+# SISTEMA OPERACIONAL
+# -----------------------------------------------------------------------------
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+
+# -----------------------------------------------------------------------------
+# EDITORES E IDEs
+# -----------------------------------------------------------------------------
+.vscode/
+.idea/
+*.suo
+*.user
+*.sln.docstates
+
+
+# -----------------------------------------------------------------------------
+# LOGS E TEMPORÁRIOS
+# -----------------------------------------------------------------------------
+*.log
+*.tmp
+*.temp

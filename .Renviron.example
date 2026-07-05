@@ -1,0 +1,18 @@
+# =============================================================================
+# Variáveis de ambiente para a análise em R — Piso da Enfermagem
+# -----------------------------------------------------------------------------
+# Mesma convenção do .env do Python, para que R e Python apontem para os mesmos
+# dados. Copie para `.Renviron` (não versionado) na raiz do projeto ou no HOME:
+#     cp .Renviron.example .Renviron
+# No R, leia com Sys.getenv("PISO_OURO"), etc. O R reconhece $PISO_DATA_ROOT
+# dentro de valores subsequentes.
+#
+# OBS.: os scripts atuais em codigo/ ainda usam caminhos fixos. A migração deles
+# para estas variáveis é um próximo passo sugerido (ver README).
+# =============================================================================
+
+PISO_DATA_ROOT=/mnt/data/estudos/piso_enfermagem
+PISO_PRATA=${PISO_DATA_ROOT}/prata
+PISO_OURO=${PISO_DATA_ROOT}/ouro
+PISO_BRONZE_CAGED=/mnt/data/bronze/novo_caged
+PISO_BRONZE_RAIS=/mnt/data/bronze/rais

@@ -82,23 +82,107 @@ A **intensidade do tratamento** é mensurada pelo **Índice de Kaitz** — razã
 ```
 piso-enfermagem/
 │
-├── codigo/
-│   ├── 00 - leitura.R      # Download, descompactação e consolidação do Novo CAGED
-│   ├── 01 - dados.R        # Filtragem, tratamento e deflacionamento dos dados
+├── src/piso/               # Ingestão e tratamento dos dados (Python + DuckDB)
+│   ├── config.py           # Lê variáveis de ambiente e resolve os caminhos
+│   ├── constants.py        # CBOs de enfermagem e pisos (fonte única)
+│   ├── deflator.py         # Deflator INPC: .xlsx → prata/deflator.parquet
+│   ├── bronze_to_prata.py  # CAGED bruto → prata (limpo, filtrado, tipado)
+│   ├── prata_to_ouro.py    # Prata + deflator → base analítica (ouro)
+│   └── cli.py              # CLI: `piso deflator | bronze-to-prata | prata-to-ouro | build-all`
+│
+├── codigo/                 # Análise em R (consome a camada ouro)
+│   ├── 01 - dados.R        # (legado) Filtragem, tratamento e deflacionamento
 │   ├── 02 - tabelas.R      # Geração das tabelas de análise
 │   └── 03 - gráficos.R     # Geração dos gráficos
 │
+├── tests/                  # Testes da pipeline Python
+├── pyproject.toml          # Dependências Python (uv)
+├── .env.example            # Modelo de variáveis de ambiente (Python)
+├── .Renviron.example       # Modelo de variáveis de ambiente (R)
+│
 ├── docs/
 │   ├── artigos/            # Literatura de referência (PDFs)
-│   └── dados/              # Dados auxiliares (deflator, etc.) — não versionados
+│   └── dados/              # Dados auxiliares — não versionados
 │
 ├── output/
 │   └── tabelas.xlsx        # Tabelas de resultados
 │
-└── README.Rmd              # Este arquivo
+└── README.md               # Este arquivo
 ```
 
-> **Nota:** Os microdados brutos do Novo CAGED (arquivos `.txt`, `.parquet` e `.7z`) **não estão incluídos** neste repositório devido ao volume (dezenas de GB). O script `00 - leitura.R` automatiza o download diretamente do FTP do MTE.
+> **Nota:** Os microdados brutos do Novo CAGED (arquivos `.txt`, `.parquet` e `.7z`) **não estão incluídos** neste repositório devido ao volume (dezenas de GB).
+
+---
+
+## Ingestão de dados (Python)
+
+A preparação dos dados segue uma **arquitetura medalhão** (bronze → prata → ouro), sobre
+arquivos **parquet** consultados com **DuckDB**. A ingestão e o tratamento ficam em Python
+(pasta [`src/piso/`](src/piso)); a **análise** (tabelas e gráficos) permanece em R
+(pasta [`codigo/`](codigo)) e consome a base da camada **ouro**.
+
+Os dados deve estar organizados em cadas organizados em camadas:
+
+| Camada | Onde | O que é |
+|--------|------|---------|
+| **bronze** | outros diretórios do servidor | dados brutos (RAIS, Novo CAGED), somente leitura |
+| **prata**  | `.../piso_enfermagem/prata` | CAGED de enfermagem limpo, tipado e filtrado + deflator |
+| **ouro**   | `.../piso_enfermagem/ouro`  | `caged_analitico.parquet` — base final deflacionada para análise |
+
+### Variáveis de ambiente
+
+**Ao clonar o repositório**, apenas copie o modelo e ajuste os caminhos —
+nenhum caminho fica no código:
+
+```bash
+cp .env.example .env      # depois edite .env com os caminhos do servidor
+```
+
+| Variável | Papel | Default |
+|----------|-------|---------|
+| `PISO_DATA_ROOT` | raiz do projeto de dados | `/mnt/data/estudos/piso_enfermagem` |
+| `PISO_PRATA` | camada prata | `${PISO_DATA_ROOT}/prata` |
+| `PISO_OURO` | camada ouro | `${PISO_DATA_ROOT}/ouro` |
+| `PISO_BRONZE_CAGED` | origem bruta do Novo CAGED | `/mnt/data/bronze/novo_caged` |
+| `PISO_BRONZE_RAIS` | origem bruta da RAIS | `/mnt/data/bronze/rais` |
+| `PISO_DEFLATOR_XLSX` | planilha bruta do INPC | — |
+| `PISO_DEFLATOR` | deflator já em parquet | `${PISO_PRATA}/deflator.parquet` |
+| `PISO_DUCKDB_THREADS` | paralelismo do DuckDB (opcional) | `4` |
+
+Os defaults já servem; basta confirmar as origens da bronze e a planilha do deflator.
+`PISO_PRATA`, `PISO_OURO` e `PISO_DEFLATOR` são derivados de `PISO_DATA_ROOT` quando não definidos.
+
+### Executar a pipeline
+
+O ambiente Python é gerenciado com [`uv`](https://docs.astral.sh/uv/):
+
+```bash
+# 1. Instalar o uv (uma vez por máquina)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. Instalar as dependências do projeto
+uv sync
+
+# 3. Rodar a pipeline completa (deflator → bronze→prata → prata→ouro)
+uv run piso build-all
+```
+
+Também é possível rodar cada passo isoladamente:
+
+```bash
+uv run piso deflator          # planilha INPC → prata/deflator.parquet
+uv run piso bronze-to-prata   # CAGED bruto → prata/caged_enfermagem/ (particionado por ano)
+uv run piso prata-to-ouro     # prata + deflator → ouro/caged_analitico.parquet
+```
+
+Para conferir o resultado:
+
+```bash
+uv run pytest                 # testes da pipeline
+duckdb -c "SELECT categoria, count(*), avg(salreal) \
+           FROM read_parquet('$PISO_OURO/caged_analitico.parquet') GROUP BY 1"
+```
+
 
 ---
 

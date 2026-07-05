@@ -92,6 +92,16 @@ docs/base_piso_invest_25_07.xlsx
 
 
 # -----------------------------------------------------------------------------
+# AMBIENTE PYTHON (pipeline de ingestão)
+# -----------------------------------------------------------------------------
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+
+# -----------------------------------------------------------------------------
 # SAÍDAS GERADAS (figuras e relatórios — opcionais)
 # -----------------------------------------------------------------------------
 # Descomente se não quiser versionar gráficos gerados automaticamente:
